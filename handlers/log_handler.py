@@ -10,29 +10,39 @@ async def auto_log_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     message = update.effective_message
 
-    # Pastikan pesan berasal dari grup dan berupa teks
-    if not chat or chat.type not in ["group", "supergroup"]:
-        return
+    # Pastikan pesan berupa teks terlebih dahulu
     if not message or not message.text:
+        return
+
+    # Logger hanya tersedia di dalam grup
+    if not chat or chat.type not in ["group", "supergroup"]:
+        await message.reply_text("❌ Perintah logger hanya dapat digunakan di dalam grup.")
+        return
+
+    if not user:
         return
 
     text = message.text.strip()
     if not text:
         return
 
+    # STANDARDISASI: semua command logger harus diawali "/"
+    if not text.startswith("/"):
+        return
+
+    # Hapus prefix "/" untuk diproses sebagai perintah logger
+    text = text[1:].strip()
+
     role = get_user_role(chat.id, user.id)
 
-    # ADD command: "+ ..." or "add ..."
+    # ADD command: "/+" atau "/add"
     if text.startswith("+") or text.lower().startswith("add"):
-        if role < Role.USER_INPUT:
-            await message.reply_text("⛔ Akses ditolak. Anda tidak memiliki izin untuk menambah data.")
-            return
-
         sukses, custom_ts, log_text, additional_desc, err_msg = parse_logger_input(text)
         if not sukses:
             await message.reply_text(f"❌ {err_msg}")
             return
 
+        # Jika user_input, hanya boleh menambah log untuk tanggal hari ini
         if role == Role.USER_INPUT:
             today = datetime.now().strftime("%Y-%m-%d")
             if custom_ts != today:
@@ -57,9 +67,10 @@ async def auto_log_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await message.reply_text("❌ Gagal menyimpan log. Pastikan /setup sudah dijalankan oleh Admin grup.")
             return
 
+        await message.reply_text(f"✅ Log berhasil disimpan (baris {row_id}).")
         return
 
-    # EDIT command: "edit ..." or "e ..."
+    # EDIT command: "/e" atau "/edit"
     if text.lower().startswith(("edit", "e ")):
         if role < Role.USER_INPUT:
             await message.reply_text("⛔ Akses ditolak. Anda tidak memiliki izin untuk mengedit data.")
@@ -81,7 +92,7 @@ async def auto_log_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await message.reply_text(pesan)
         return
 
-    # DELETE command: "del ...", "d ...", "delete ...", "-..."
+    # DELETE command: "/-" atau "/del" dan seterusnya
     if text.lower().startswith(("del", "d ", "delete", "-")):
         if role < Role.USER_INPUT:
             await message.reply_text("⛔ Akses ditolak. Anda tidak memiliki izin untuk menghapus data.")

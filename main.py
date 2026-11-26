@@ -21,15 +21,17 @@ def main():
     app.add_handler(CommandHandler("cekakses", check_role_command))
     app.add_handler(CommandHandler("id", get_id_command))
 
-    # Logger otomatis untuk pesan yang diawali '+'
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), auto_log_message))
-
     # Unduh Berkas
     app.add_handler(CommandHandler("getlogs", get_logs_command))
 
     # Bantuan & Menu
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("menu", help_command))
+
+    # Logger otomatis untuk pesan yang diawali '+' atau '/ +'
+    # Jangan menangkap pesan yang sudah dikenali sebagai command Telegram,
+    # supaya /help, /setup, /getlogs, dll tetap diproses oleh handler masing-masing.
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, auto_log_message))
 
     logging.info("BotFevagroup Asynchronous berjalan...")
     app.run_polling()

@@ -82,13 +82,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         "🟡 <b>USER INPUT (Pencatat Harian)</b>\n"
         "• <b>Tambah log:</b>\n"
-        "  <code>+ [DDMMYYYY] keterangan_log [deskripsi tambahan]</code>\n"
-        "  atau <code>add [DDMMYYYY] keterangan_log [deskripsi tambahan]</code>\n"
+        "  <code>/+ [DDMMYYYY] keterangan_log [deskripsi tambahan]</code>\n"
         "• <b>Edit log:</b>\n"
-        "  <code>edit &lt;no_baris&gt; keterangan_baru [deskripsi tambahan]</code>\n"
-        "  atau <code>e &lt;no_baris&gt; keterangan_baru [deskripsi tambahan]</code>\n"
+        "  <code>/e &lt;no_baris&gt; keterangan_baru [deskripsi tambahan]</code>\n"
         "• <b>Hapus log:</b>\n"
-        "  <code>del &lt;no_baris&gt;</code> / <code>d &lt;no_baris&gt;</code> / <code>-&lt;no_baris&gt;</code>\n"
+        "  <code>/- &lt;no_baris&gt;</code>\n"
         "• User Input hanya dapat menambah, mengedit, dan menghapus data pada hari yang sama.\n\n"
 
         "🟠 <b>ADMIN GRUP (User Admin)</b>\n"
