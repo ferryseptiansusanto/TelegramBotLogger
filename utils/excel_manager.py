@@ -129,6 +129,45 @@ async def edit_data(chat_id: int, row: int, tipe_trx: str, keterangan: str, satu
         return True, "Sukses"
 
 
+async def edit_logger_data(chat_id: int, row: int, keterangan: str, detail: str,
+                           require_same_day: bool = False) -> tuple[bool, str]:
+    """Edit only the logger text (Keterangan) and additional detail for a row."""
+    filepath = get_filepath(chat_id)
+    if not filepath or not os.path.exists(filepath):
+        return False, "File log tidak ditemukan."
+
+    async with excel_lock:
+        wb = load_workbook(filepath)
+        ws = wb.active
+
+        excel_row = row + 1
+        if excel_row <= 1 or excel_row > ws.max_row:
+            return False, f"Nomor baris tidak valid. Saat ini hanya ada data baris 1 sampai {ws.max_row - 1}."
+
+        if require_same_day:
+            cell_value = ws.cell(row=excel_row, column=1).value
+            if not cell_value:
+                return False, "Baris yang dipilih tidak memiliki data tanggal."
+
+            try:
+                if isinstance(cell_value, datetime):
+                    entry_date = cell_value.date()
+                else:
+                    entry_date = datetime.strptime(str(cell_value).strip(), "%Y-%m-%d %H:%M:%S").date()
+
+                current_date = datetime.now().date()
+                if entry_date != current_date:
+                    return False, "User Input hanya dapat mengedit data pada hari yang sama."
+            except Exception:
+                return False, "Format tanggal pada baris tersebut tidak dapat divalidasi."
+
+        ws.cell(row=excel_row, column=7, value=keterangan)
+        ws.cell(row=excel_row, column=10, value=detail)
+        wb.save(filepath)
+
+        return True, "Sukses"
+
+
 async def delete_data(chat_id: int, row: int) -> tuple[bool, str]:
     filepath = get_filepath(chat_id)
     if not filepath or not os.path.exists(filepath):
@@ -143,6 +182,43 @@ async def delete_data(chat_id: int, row: int) -> tuple[bool, str]:
 
         if excel_row <= 1 or excel_row > ws.max_row:
             return False, f"Nomor baris tidak valid. Saat ini hanya ada data dari baris 1 hingga {ws.max_row - 1}."
+
+        ws.delete_rows(excel_row)
+        wb.save(filepath)
+
+        return True, "Sukses"
+
+
+async def delete_logger_data(chat_id: int, row: int, require_same_day: bool = False) -> tuple[bool, str]:
+    """Delete a logger row, optionally enforcing same-day restriction."""
+    filepath = get_filepath(chat_id)
+    if not filepath or not os.path.exists(filepath):
+        return False, "File log tidak ditemukan."
+
+    async with excel_lock:
+        wb = load_workbook(filepath)
+        ws = wb.active
+
+        excel_row = row + 1
+        if excel_row <= 1 or excel_row > ws.max_row:
+            return False, f"Nomor baris tidak valid. Saat ini hanya ada data baris 1 sampai {ws.max_row - 1}."
+
+        if require_same_day:
+            cell_value = ws.cell(row=excel_row, column=1).value
+            if not cell_value:
+                return False, "Baris yang dipilih tidak memiliki data tanggal."
+
+            try:
+                if isinstance(cell_value, datetime):
+                    entry_date = cell_value.date()
+                else:
+                    entry_date = datetime.strptime(str(cell_value).strip(), "%Y-%m-%d %H:%M:%S").date()
+
+                current_date = datetime.now().date()
+                if entry_date != current_date:
+                    return False, "User Input hanya dapat menghapus data pada hari yang sama."
+            except Exception:
+                return False, "Format tanggal pada baris tersebut tidak dapat divalidasi."
 
         ws.delete_rows(excel_row)
         wb.save(filepath)
